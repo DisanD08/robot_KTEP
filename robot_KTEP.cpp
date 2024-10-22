@@ -177,14 +177,11 @@ void step() {
     rendering();
 
     turn_left();
-    step(); step();
+    for (int i = 1; i < 6; i++) { step(); }
     turn_right();
-    step(); step();
-    step(); step();
-    turn_left(); step(); turn_right();
-    step(); step();
-    step(); step();
-    step(); step();
+    for (int i = 1; i < 10; i++) { step(); }
+    turn_right();
+    for (int i = 1; i < 6; i++) { step(); }
 
 
     return 0;
