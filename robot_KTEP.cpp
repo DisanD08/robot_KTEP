@@ -11,13 +11,14 @@ using namespace std;
 
 int player_coordX = 1;
 int player_coordY = 1;
+int beepBag = 0;
 
 char playerSymbol[4]{'>', 'V', '<', '^'};
-string facing_[4]{"EAST", "SOUTH", "WEST", "NORTH"};
+string facing_[4]{"EAST ", "SOUTH", "WEST ", "NORTH"};
 int playerSymbol_index = 0;
 
 string mapName = "map1";
-void setMap(string fileName) { mapName = fileName; }
+string mapPath = "maps/map1.map";
 
 int maxWidth = 0;
 
@@ -27,7 +28,7 @@ int maxWidth = 0;
 // Функция для чтения карты из файла и сохранения каждого символа в двумерный массив
 vector<vector<char>> readMapFromFile() {
     vector<vector<char>> map;
-    ifstream file("maps/" + mapName + ".map");
+    ifstream file(mapPath);
     string line;
 
     if (file.is_open()) {
@@ -40,6 +41,32 @@ vector<vector<char>> readMapFromFile() {
     else { cerr << "Error: can`t open file  | " << mapName << " |" << endl; }
 
     return map;
+}
+
+
+void copyMap() {
+    vector<vector<char>> map = readMapFromFile();
+    int height = map.size(); // Количество строк (высота карты)
+    int width = map[0].size(); // Количество символов в строке (ширина карты)
+
+    ofstream outfile("maps/" + mapName + ".copy");
+
+    for (int i = 0; i < height; i++) {
+        for (int a = 0; a < width; a++) {
+            outfile << map[i][a];
+        }
+        outfile << endl;
+    } 
+
+    outfile.close(); 
+}
+
+
+void setMap(string fileName) { 
+    mapName = fileName;
+    mapPath = "maps/" + fileName + ".map";
+    copyMap();
+    mapPath = "maps/" + fileName + ".copy";
 }
 
 
@@ -61,7 +88,7 @@ void placePlayerOnMap(vector<vector<char>>& map) {
 
     // Проверяем, что позиция для игрока корректна и что там находится точка
     if (targetRow >= 0 && targetRow < height && targetCol >= 0 && targetCol < width) {
-        if (map[targetRow][targetCol] == '.') {
+        if (map[targetRow][targetCol] == '.' || map[targetRow][targetCol] == '1') {
             map[targetRow][targetCol] = playerSymbol[playerSymbol_index];  // Заменяем точку на символ игрока
         }
         else { cerr << "Error: place for player already occupied by another symbol." << endl; }
@@ -76,8 +103,8 @@ void displayMap(const vector<vector<char>>& map) {
     int width = map[0].size(); // Количество символов в строке (ширина карты)
 
     cout << endl;
-    cout << "  COORD.      FACING" << endl;
-    cout << "  (" << player_coordX << ", " << player_coordY << ")       " << facing_[playerSymbol_index] << endl;
+    cout << "  COORD.      FACING     BEEP-BAG" << endl;
+    cout << "  (" << player_coordX << ", " << player_coordY << ")       " << facing_[playerSymbol_index]  << "        " << beepBag << endl;
 
     // Нумерация строк ось Y
     int rowNum = (height - 1) / 2;
@@ -144,14 +171,20 @@ int front_check() {
     //Проверка есть ли впереди игрока какое-то препятствие
     if (playerSymbol[playerSymbol_index] == '>') { 
         if (player_coordX == maxWidth) { return 1; } //Если игрок находится справа в самом конце 
-        for (int i = 1; i < 4; i++) { if (map[targetRow][targetCol + i] != ' ') { return 1; } } 
+        for (int i = 1; i < 4; i++) { 
+            if (map[targetRow][targetCol + i] != ' ' && map[targetRow][targetCol + i] != '1') { return 1; }
+        } 
     }
-    if (playerSymbol[playerSymbol_index] == '<') { for (int i = 1; i < 4; i++) { if (map[targetRow][targetCol - i] != ' ') { return 1; } } }
+    if (playerSymbol[playerSymbol_index] == '<') { for (int i = 1; i < 4; i++) { 
+        if (map[targetRow][targetCol - i] != ' ' && map[targetRow][targetCol - i] != '1') { return 1; } }
+    }
 
-    if (playerSymbol[playerSymbol_index] == '^') { for (int i = 1; i < 2; i++) { if (map[targetRow - i][targetCol] != ' ') { return 1; } } }
+    if (playerSymbol[playerSymbol_index] == '^') { for (int i = 1; i < 2; i++) { 
+        if (map[targetRow - i][targetCol] != ' ' && map[targetRow - i][targetCol] != '1') { return 1; } }
+    }
     if (playerSymbol[playerSymbol_index] == 'V') { 
         if (player_coordY == 1) { return 1; } //Если игрок находится в самом низу карты, то еще ниже нет куда 
-        for (int i = 1; i < 2; i++) { if (map[targetRow + i][targetCol] != ' ') { return 1; } } 
+        for (int i = 1; i < 2; i++) { if (map[targetRow + i][targetCol] != ' ' && map[targetRow + i][targetCol] != '1') { return 1; } }
     }
 
     return 0;
@@ -166,7 +199,51 @@ void step() {
         if (playerSymbol[playerSymbol_index] == '<') { player_coordX--; }
         if (playerSymbol[playerSymbol_index] == '^') { player_coordY++; }
     }
-    rendering();
+    rendering(); //Отрисовка
+}
+
+
+//Проверка стоит ли игрок на "1"
+int chekForBeep() {
+    // Чтение карты из файла
+    vector<vector<char>> map = readMapFromFile();
+
+    int height = map.size(); // Количество строк (высота карты)
+    int width = map[0].size(); // Количество символов в строке (ширина карты)
+
+    int targetRow = (height - 3) - 2 * (player_coordY - 1);  // Строка для игрока (по оси Y)
+    int targetCol = 2 + 4 * (player_coordX - 1);  // Столбец для игрока (по оси X)
+
+    if (map[targetRow][targetCol] == '1') { return 1; }
+
+    return 0;
+}
+
+
+void collectBeep() {
+    vector<vector<char>> map = readMapFromFile();
+    int height = map.size(); // Количество строк (высота карты)
+    int width = map[0].size(); // Количество символов в строке (ширина карты)
+
+    int targetRow = (height - 3) - 2 * (player_coordY - 1);  // Строка для игрока (по оси Y)
+    int targetCol = 2 + 4 * (player_coordX - 1);  // Столбец для игрока (по оси X)
+
+    if (chekForBeep() == 1) {
+        ofstream file("maps/" + mapName + ".copy");
+        map[targetRow][targetCol] = '.';
+
+        for (int i = 0; i < height; i++) {
+            for (int a = 0; a < width; a++) {
+                file << map[i][a];
+            }
+            file << endl;
+        } 
+
+        beepBag++;
+        file.close();
+    } 
+    
+
 }
 
 
@@ -176,13 +253,23 @@ void step() {
     setMap("map3");
     rendering();
 
-    turn_left();
-    for (int i = 1; i < 6; i++) { step(); }
-    turn_right();
-    for (int i = 1; i < 10; i++) { step(); }
-    turn_right();
-    for (int i = 1; i < 6; i++) { step(); }
+    collectBeep();
 
+    turn_left();
+    step(); step();
+    turn_right();
+    step(); step();
+    turn_right();
+    step(); step();
+    turn_left();
+    step();
+    collectBeep();
+    step();
+    turn_left(); turn_left(); 
+    step();
+    collectBeep();
+    step();
 
     return 0;
-}*/
+} */
+
