@@ -13,15 +13,14 @@ int player_coordX = 1;
 int player_coordY = 1;
 int beepBag = 0;
 
-char playerSymbol[4]{'>', 'V', '<', '^'};
-string facing_[4]{"EAST ", "SOUTH", "WEST ", "NORTH"};
+char playerSymbol[4] = {'>', 'V', '<', '^'};
+string facing_[4] = {"EAST ", "SOUTH", "WEST ", "NORTH"};
 int playerSymbol_index = 0;
 
 string mapName = "map1";
 string mapPath = "maps/map1.map";
 
 int maxWidth = 0;
-
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -134,7 +133,6 @@ void displayMap(const vector<vector<char>>& map) {
 }
 
 
-
 void rendering() {
     //Очистка терминала
     system("cls");
@@ -153,12 +151,12 @@ void rendering() {
 }
 
 
-void turn_right() { playerSymbol_index = (playerSymbol_index + 1) % 4; rendering(); }
-void turn_left() { playerSymbol_index = (playerSymbol_index - 1 + 4) % 4; rendering(); }
+void turnRight() { playerSymbol_index = (playerSymbol_index + 1) % 4; rendering(); }
+void turnLeft() { playerSymbol_index = (playerSymbol_index - 1 + 4) % 4; rendering(); }
 
 
 //Проверка нет ли преград перед игроком
-int front_check() {
+int frontCheck() {
     //Запись карты с файла в массив
     vector<vector<char>> map = readMapFromFile();
 
@@ -193,7 +191,7 @@ int front_check() {
 
 //Делает шаг в ту сторону, куда смотрит игрок
 void step() {
-    if (front_check() == 0) {
+    if (frontCheck() == 0) {
         if (playerSymbol[playerSymbol_index] == '>') { player_coordX++; }
         if (playerSymbol[playerSymbol_index] == 'V') { player_coordY--; }
         if (playerSymbol[playerSymbol_index] == '<') { player_coordX--; }
@@ -204,7 +202,7 @@ void step() {
 
 
 //Проверка стоит ли игрок на "1"
-int chekForBeep() {
+int checkForBeep() {
     // Чтение карты из файла
     vector<vector<char>> map = readMapFromFile();
 
@@ -228,7 +226,7 @@ void collectBeep() {
     int targetRow = (height - 3) - 2 * (player_coordY - 1);  // Строка для игрока (по оси Y)
     int targetCol = 2 + 4 * (player_coordX - 1);  // Столбец для игрока (по оси X)
 
-    if (chekForBeep() == 1) {
+    if (checkForBeep() == 1) {
         ofstream file("maps/" + mapName + ".copy");
         map[targetRow][targetCol] = '.';
 
@@ -249,27 +247,9 @@ void collectBeep() {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-/*int main() {
+int main() {
     setMap("map3");
     rendering();
 
-    collectBeep();
-
-    turn_left();
-    step(); step();
-    turn_right();
-    step(); step();
-    turn_right();
-    step(); step();
-    turn_left();
-    step();
-    collectBeep();
-    step();
-    turn_left(); turn_left(); 
-    step();
-    collectBeep();
-    step();
-
     return 0;
-} */
-
+} 
